@@ -19,14 +19,15 @@ temp_f = 20 +273
 temp_surf = 20 + 273
 temp_Tn = [20+273] * 9
 temp_Tn_new = [0] * 9
+temp_Term = 20 + 273
 
 tsa_class_tf= tsa_class.Temperature_Furnace(delta_T)
 tsa_class_sht = tsa_class.Surface_Heat_Transfer(delta_T)
 tsa_class_surFP = tsa_class.Surface_Fireporoofing(delta_T)
 tsa_class_fp = tsa_class.Fp_to_Fp(delta_T)
+tsa_class_Term = tsa_class.Fp_terminal(delta_T)
 
-
-for row in range(11):
+for row in range(49):
     if row == 0 : continue
     time_minutes = time_second / 60
     temp_f=  tsa_class_tf.t_furnace(time_minutes)
@@ -37,11 +38,13 @@ for row in range(11):
 
     for colum,_ in enumerate(temp_Tn):
      sheet2.write(row,colum+3,temp_Tn[colum])
+
+    sheet2.write(row,12,temp_Term)
  
     tsa_class_sht.surface_HT(temp_f,temp_surf)
     temp_surf_new = tsa_class_surFP.surface_FP(temp_surf,temp_Tn[0],tsa_class_sht.qc,tsa_class_sht.qr)
 
-    temp_Tn_new[0] = tsa_class_fp.fp_to_fp(0,temp_surf,temp_Tn[0],temp_Tn[0])
+    temp_Tn_new[0] = tsa_class_fp.fp_to_fp(0,temp_surf,temp_Tn[0],temp_Tn[1])
     for sheaf,_ in enumerate(temp_Tn):
      if sheaf == 0 : continue 
      elif sheaf == 8 : break
@@ -49,12 +52,13 @@ for row in range(11):
       temp_Tn_new[sheaf] = tsa_class_fp.fp_to_fp(sheaf,temp_Tn[sheaf-1],temp_Tn[sheaf],temp_Tn[sheaf+1])
     temp_Tn_new[8] = tsa_class_fp.fp_to_fp(8,temp_Tn[7],temp_Tn[8],293)
 
-
+    temp_Term_new = tsa_class_Term.fp_terminal(temp_Tn[8],temp_Term)
 
     time_second = time_second + delta_T
     temp_surf = temp_surf_new
     for sheaf,_ in enumerate(temp_Tn):
      temp_Tn[sheaf] = temp_Tn_new[sheaf]
+     temp_Term = temp_Term_new
 
 
 

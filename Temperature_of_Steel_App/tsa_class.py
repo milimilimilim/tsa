@@ -13,6 +13,8 @@ class Temperature_calculation:
        self.d_time = delta_time
        self.ci = 1
        self.rho_i = 130
+       self.cs = 0.482
+       self.rho_s = 7850
        
      
        # super().__init__(num1, num2)
@@ -41,7 +43,7 @@ class Surface_Fireporoofing(Temperature_calculation):
         self.temp_surf = temp_surf
         ther_conductivity = 0.09
         d_surf = 0.625
-        d_t1 =1.25
+        d_tn =1.25
         len_x_surf =175-1.25
         len_y_surf = 225- 1.25
         len_around_FP = (225 + 175) * 2 * (10**-3)
@@ -50,7 +52,7 @@ class Surface_Fireporoofing(Temperature_calculation):
         ther_resistivity_surf = self.d_time / (self.rho_i * self.ci * area_surf)
         power_per_len_convection = len_around_FP * qc
         power_per_len_radiation = len_around_FP *qr
-        power_per_len_conduction = len_around_surf * (ther_conductivity /(d_surf + (d_t1/2))) * ( temp_T0- temp_surf)
+        power_per_len_conduction = len_around_surf * (ther_conductivity /(d_surf + (d_tn/2))) * ( temp_T0- temp_surf)
         self.temp_surf = temp_surf + ther_resistivity_surf * (power_per_len_convection + power_per_len_radiation +power_per_len_conduction)
 
         return self.temp_surf
@@ -64,9 +66,9 @@ class Fp_to_Fp(Temperature_calculation):
         len_y_Tprev = 225 - (1.25 +2.5*(number_sheaf))
         len_x_Tn = 175 - (1.25 +2.5*(number_sheaf+1))
         len_y_Tn = 225 - (1.25 +2.5*(number_sheaf+1))
-        area_Tn =((len_x_Tprev * len_y_Tprev) - (len_x_Tn * len_y_Tn) ) * (10 ** -6)
         len_around_Tprev = (len_x_Tprev + len_y_Tprev) * 2 * (10 ** -3)
         len_around_Tnext = (len_x_Tn + len_y_Tn) * 2 * (10 ** -3)
+        area_Tn =((len_x_Tprev * len_y_Tprev) - (len_x_Tn * len_y_Tn) ) * (10 ** -6)
         ther_conductivity_prev = 0.09
         ther_conductivity_next = 0.09
         ther_resistivity_Tn = self.d_time / (self.rho_i * self.ci * area_Tn)
@@ -74,5 +76,26 @@ class Fp_to_Fp(Temperature_calculation):
         power_per_len_conduction_next = len_around_Tnext * (ther_conductivity_next /((d_tn/2) + (d_tn/2)) ) * ( temp_Tnext- temp_Tn)
         self.temp_Tn = temp_Tn + ther_resistivity_Tn * (power_per_len_conduction_prev + power_per_len_conduction_next)
         
+        #print(number_sheaf,temp_Tprev,temp_Tn,temp_Tnext)
         return self.temp_Tn
+
+class Fp_terminal(Temperature_calculation):
+
+    def fp_terminal(self,temp_Term_prev,temp_Term):
+        self.temp_Term = temp_Term
+        d_tn = 12.5
+        d_Term = 6.25
+        len_x_Term_prev = 175 - (1.25 +2.5*9 )
+        len_y_Term_prev = 225 - (1.25 +2.5*9 )
+        len_x_Term = 175 - (1.25 +2.5*9 + 1.25)
+        len_y_Term = 225 - (1.25 +2.5*9 + 1.25)
+        len_around_Term_prev = (len_x_Term_prev + len_y_Term_prev) * 2 * (10 ** -3)
+        area_Term = ((len_x_Term_prev * len_y_Term_prev) - (len_x_Term * len_y_Term) ) * (10 ** -6)
+        area_S = 0.005976
+        ther_conductivity_Term = 0.9
+        ther_resistivity_Term = self.d_time / (self.rho_i * self.ci * area_Term + self.rho_s * self.cs * area_S)
+        self.temp_Term = temp_Term + ther_resistivity_Term * ( len_around_Term_prev * ther_conductivity_Term / ((d_tn/2)+ d_Term))*(temp_Term_prev - temp_Term)
+
+       # print(ther_resistivity_Term,len_around_Term_prev,ther_conductivity_Term)
+        return self.temp_Term
  
