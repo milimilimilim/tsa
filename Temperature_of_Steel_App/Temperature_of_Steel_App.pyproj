@@ -5,7 +5,7 @@
     <ProjectGuid>eb36ef57-3746-4423-b121-3004f006b8f5</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>main_tsa.py</StartupFile>
+    <StartupFile>tsa_test_app.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
