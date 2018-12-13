@@ -45,7 +45,7 @@ pathpath = inifile.get('settings', 'data_save_path')
 #char_detafile_path = os.path.join(pathpath,char_detafile_name)
 #print(char_detafile_path)
 
-print(inifile.get('settings', 'data_save_path'))
+#print(inifile.get('settings', 'data_save_path'))
 
 #excel_sheet.save(char_detafile_path)
 tsa0 = tsa_class.Loading_input_value()
@@ -54,9 +54,9 @@ tsa1 = tsa_class.Surface_Fireporoofing(tsa0)
 tsa2 = tsa_class.Fp_to_Fp(tsa0)
 tsa3 = tsa_class.Fp_terminal(tsa0)
 tsaC= tsa_class.Stability_Analysis(tsa0)
-print(tsa1.temperature_furnace(10))
+#print(tsa1.temperature_furnace(10))
 print(tsa1.cal_tempMax())
-print(tsaC.cal_stability_time(tsa1))
+print('Stime'+ str(tsaC.cal_stability_time(tsa1)))
 t_t = tsaC.cal_total_time (tsa1)
 print(t_t)
 t_h =t_t // 1
@@ -64,16 +64,16 @@ t_m=((t_t - t_h) *60)//1
 print((t_t -t_h)-(t_m/60))
 t_s =(((t_t -t_h)-(t_m/60))*3600) // 1
 print(t_h,t_m,t_s)
-SS = 0.001234
+#SS = 0.001234
 
-Kb = 0
-while (SS//1 == 0) :
-    SS=SS*10
-    Kb = Kb +1
-print(SS,Kb)
-SS= (SS//0.1)/10
-SA = SS * (10**(-1*Kb))
-print(SA)
+#Kb = 0
+#while (SS//1 == 0) :
+#    SS=SS*10
+#    Kb = Kb +1
+#print(SS,Kb)
+#SS= (SS//0.1)/10
+#SA = SS * (10**(-1*Kb))
+#print(SA)
 
 
 #print(tsa1.temp_F)
@@ -101,6 +101,10 @@ temp_Tn = [20+273] * 9
 #for i in range(10):
 #    print(j)
 #    for J,_ in enumerate(j) : j[J]=j[J]+J
+ADF = [[0 for i in range(2)] for j in range(4)]
+ADF[2][1] = 50
+print(ADF)
+
 classesA = []
 classesA.append(tsa_class.Test_tsa(1, 'テスト１'))
 classesA.append(tsa_class.Test_tsa(2, 'テスト２'))
