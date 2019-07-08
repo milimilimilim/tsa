@@ -244,7 +244,7 @@ class TemperatureCalculation:
         self.cal_fp_thick()  # 各層耐火被覆厚計算 array_thickness_fireproof に代入
         self.assignment_len_width_height_tp()  # 各層耐火被覆縦横長さ計算 array_len_width_height に代入
         self.cal_len_around()  # 各層周囲長計算 array_len_around に代入
-        # self.cal_area()  # 各層面積計算 array_area に代入
+        self.cal_area()  # 各層面積計算 array_area に代入
 
         # print(self.len_wh_TP)
         # print(fp_thick)
@@ -373,7 +373,7 @@ class TemperatureCalculation:
         else:
             print("Error : Unexpected string in type of steel material")
 
-    # 角形鋼管 各層 面積計算
+    # 各層 面積計算
     def cal_area(self):
         if self.type_steel_material == 'square':
             for i, layer_name in enumerate(self.list_name_layer):
@@ -396,11 +396,13 @@ class TemperatureCalculation:
                                                              self.thickness_steel_web))
 
     # H形鋼 各層 面積計算
-    def cal_h_type_area(self, n_layer):
-        h_area = (self.array_len_width_height[n_layer][0] * self.array_len_width_height[n_layer][1]) - (
-                (self.height_steel - (2 * (self.array_thickness_fireproof[n_layer] + self.thickness_steel_flange))) * (
-                self.width_steel - self.thickness_steel_web))
+    def cal_h_type_area(self, layer_number):
+        area_h_beam = 0
 
+        # h_area = (self.array_len_width_height[n_layer][0] * self.array_len_width_height[n_layer][1]) - (
+        #         (self.height_steel - (2 * (self.array_thickness_fireproof[1] + self.thickness_steel_flange))) * (
+        #             self.width_steel - self.thickness_steel_web))
+        h_area = 0
         return h_area
 
     # 外気から表面耐火被覆への温度計算
