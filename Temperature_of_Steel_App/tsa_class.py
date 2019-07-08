@@ -414,7 +414,7 @@ class TemperatureCalculation:
 
     def surface_fp(self, temp_f, temp_surf, temp_t0):
         self.temp_t0 = temp_t0
-        thermal_conductivity = pf_thermal_conductivity(temp_surf)
+        thermal_conductivity = TemperatureCalculation.pf_thermal_conductivity(temp_surf)
         self.surface_heat_transfer(temp_f, temp_surf)
 
         # len_x_surf = self.len_wh_TP[1][0]
@@ -454,7 +454,7 @@ class FpToFp(TemperatureCalculation):
 
         area_tn = self.array_area[number_layer + 1]
 
-        thermal_conductivity = pf_thermal_conductivity(temperature_layer)
+        thermal_conductivity = TemperatureCalculation.pf_thermal_conductivity(temperature_layer)
         thermal_resistivity_tn = self.delta_time / (self.density_fireproof * self.specific_heat_fireproof * area_tn)
         power_per_len_conduction_prev = \
             len_around_prev * (
@@ -494,7 +494,7 @@ class FpTerminal(TemperatureCalculation):
         area_term = self.array_area[self.total_layer + 1]
         area_s = self.array_area[self.total_layer + 2]
 
-        thermal_conductivity_term = pf_thermal_conductivity(self.temp_term)
+        thermal_conductivity_term = TemperatureCalculation.pf_thermal_conductivity(self.temp_term)
         thermal_resistivity_term = \
             self.delta_time / ((self.density_fireproof * self.specific_heat_fireproof * area_term) + (
                     self.density_steel * steel_sh * area_s))
