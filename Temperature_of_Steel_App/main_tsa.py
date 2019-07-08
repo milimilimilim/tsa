@@ -4,7 +4,7 @@ import ntpath
 import xlrd
 import xlwt
 import pprint
-import tsa_class
+import Temperature_of_Steel_App.tsa_class as tsa_class
 from datetime import datetime
 import tkinter.messagebox
 

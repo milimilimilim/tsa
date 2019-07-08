@@ -4,7 +4,7 @@ import os
 import time
 import xlrd
 import xlwt
-import tsa_class
+import Temperature_of_Steel_App.tsa_class as tsa_class
 from decimal import *
 import configparser
 from datetime import datetime
