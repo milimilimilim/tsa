@@ -398,7 +398,6 @@ class TemperatureCalculation:
     # H形鋼 各層 面積計算
     def cal_h_type_area(self, layer_number):
         area_h_beam = 0
-
         # h_area = (self.array_len_width_height[n_layer][0] * self.array_len_width_height[n_layer][1]) - (
         #         (self.height_steel - (2 * (self.array_thickness_fireproof[1] + self.thickness_steel_flange))) * (
         #             self.width_steel - self.thickness_steel_web))
