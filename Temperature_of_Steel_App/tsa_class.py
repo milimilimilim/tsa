@@ -526,7 +526,7 @@ class StabilityAnalysis(TemperatureCalculation):
         return self.stability_time
 
     @staticmethod
-    def cal_total_time(self, cal_temp):
+    def cal_total_time(cal_temp):
         total_test_time = ((cal_temp.test_t * 60 / cal_temp.d_time) * 0.00002 * cal_temp.total_layer) / 3600
         return total_test_time
 
