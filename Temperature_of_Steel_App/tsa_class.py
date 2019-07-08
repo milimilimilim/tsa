@@ -212,11 +212,13 @@ class TemperatureCalculation:
 
         self.temperature_k = 20
 
-        # 試験体全体幅高さ
+        # 試験体全体幅高さ -------------------------------------
         self.total_width_test_specimen = 0  # 試験体幅(鋼材幅+耐火被覆厚*2(or1))
         self.total_height_test_specimen = 0  # 試験体背(鋼材背+耐火被覆厚*2(or1))
 
         # 各層厚さ配列
+        # [0.None 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,
+        # Total_Layer+2.末端層, Total_Layer+3.鋼材, Total_Layer+4.鋼材内側(角形鋼管のみ)]
         self.array_thickness = ['none', self.len_surface]
         for i in range(self.total_layer):
             self.array_thickness.append(self.thickness_per_layer)
@@ -246,29 +248,103 @@ class TemperatureCalculation:
         self.cal_len_around()  # 各層周囲長計算 array_len_around に代入
         self.cal_area()  # 各層面積計算 array_area に代入
 
-        # print(self.len_wh_TP)
-        # print(fp_thick)
-        # print(self.area_TS)
-        # print(test)
+    # 試験入力値表示
+    def display_input(self, is_round):
+        list_display = []
+        for i, name in enumerate(self.list_name_layer):
+            len_list = 15 - len(str(name))
+            list_input_str = " " * len_list + str(name) + ":"
+            list_display.append(list_input_str)
 
-        # self.fp_thick = [0 for i in range(self.total_layer + 3)]
-        # self.cal_fp_thick()
-        # self.len_wh_TP = [[0 for i in range(2)] for j in range(self.total_layer + 3)]
-        # self.cal_len_wh_tp()
-        # self.len_around = [0 for i in range(self.total_layer + 3)]
-        # self.cal_len_around()
-        # self.area_TS = [0 for i in range(self.total_layer + 3)]
-        #
-        # print(self.area_TS)
+        print("\n各層厚さ配列")
+        if is_round:
+            for i, element in enumerate(self.array_thickness):
+                if type(element) is str:
+                    n_element = element
+                else:
+                    n_element = round(float(element), 5)
+                print(list_display[i], n_element)
+        else:
+            for i, element in enumerate(self.array_thickness):
+                print(list_display[i], element)
 
-        # for i in range(self.total_layer + 3):
-        #     print("thick==" + str(self.fp_thick[i]) + "\n")
-        # for i in range(self.total_layer + 3):
-        #     print("array==" + str(self.len_wh_TP[i]) + "\n")
-        # for i in range(self.total_layer + 3):
-        #     print("around==" + str(self.len_around[i]) + "\n")
-        # for i in range(self.total_layer + 3):
-        #     print("area==" + str(self.area_TS[i]) + "\n")
+        print("\n鋼材からの各層耐火被覆厚配列")
+        if is_round:
+            for i, element in enumerate(self.array_thickness_fireproof):
+                if type(element) is str:
+                    n_element = element
+                else:
+                    n_element = round(float(element), 5)
+                print(list_display[i], n_element)
+        else:
+            for i, element in enumerate(self.array_thickness_fireproof):
+                print(list_display[i], element)
+
+        print("\n耐火被覆縦横長さ")
+        if is_round:
+            for i in range(len(self.list_name_layer)):
+                element = [self.array_len_width_height[i][0], self.array_len_width_height[i][1]]
+                n_element = [0, 0]
+                for j in range(2):
+                    if type(element[j]) is str:
+                        n_element[j] = element[j]
+                    else:
+                        n_element[j] = round(float(element[j]), 5)
+                len_str = 7 - len(str(n_element[0]))
+                print(list_display[i], n_element[0], " " * len_str, n_element[1])
+        else:
+            for i in range(len(self.list_name_layer)):
+                len_str = 20 - len(str(self.array_len_width_height[i][0]))
+                print(list_display[i], self.array_len_width_height[i][0], " " * len_str,
+                      self.array_len_width_height[i][1])
+
+        print("\n各層の加熱外周囲")
+        if is_round:
+            for i, element in enumerate(self.array_len_around):
+                if type(element) is str:
+                    n_element = element
+                else:
+                    n_element = round(float(element), 5)
+                print(list_display[i], n_element)
+        else:
+            for i, element in enumerate(self.array_len_around):
+                print(list_display[i], element)
+
+        print("\n各層の面積")
+        if is_round:
+            for i, element in enumerate(self.array_area):
+                if type(element) is str:
+                    n_element = element
+                else:
+                    n_element = round(float(element), 5)
+                print(list_display[i], n_element)
+        else:
+            for i, element in enumerate(self.array_area):
+                print(list_display[i], element)
+
+    def display_input_column(self):
+        list_display = []
+        for i, name in enumerate(self.list_name_layer):
+            len_list = 15 - len(str(name))
+            list_input_str = " " * len_list + str(name) + ":"
+            list_display.append(list_input_str)
+
+        message_line = "{0} {1} {2} {3} {4} {5} {6}"
+        print(message_line.format("          layer:", "think_L   ", "think_FP  ", "len_width ", "len_height",
+                                  "len_around", "area      "))
+        for i in range(len(self.list_name_layer)):
+            n_element = [0, 0, 0, 0, 0, 0]
+            for j, name in enumerate(
+                    [self.array_thickness[i], self.array_thickness_fireproof[i], self.array_len_width_height[i][0],
+                     self.array_len_width_height[i][1], self.array_len_around[i], self.array_area[i]]):
+                if type(name) is str:
+                    n_element[j] = name
+                else:
+                    n_element[j] = round(float(name), 8)
+                len_str = 10 - len(str(n_element[j]))
+                n_element[j] = str(n_element[j]) + " " * len_str
+            print(message_line.format(list_display[i], n_element[0], n_element[1], n_element[2], n_element[3],
+                                      n_element[4], n_element[5]))
 
     #  耐火被覆の伝導率計算
     def pf_thermal_conductivity(self, temp):
@@ -289,6 +365,7 @@ class TemperatureCalculation:
                 print('Fireproofing conductivity error : Temperature of ceramic_fiber is not collect')
         else:
             print('Fireproofing conductivity error : ' + self.type_fireproof + 'is not corresponded')
+            conductivity_pf = "Error"
         return conductivity_pf
 
     #  ISO834加熱曲線
@@ -319,10 +396,16 @@ class TemperatureCalculation:
     # 各層耐火被覆縦横長さ代入
     def assignment_len_width_height_tp(self):
 
-        for i, name_layer in enumerate(self.list_name_layer):
+        for i, layer_name in enumerate(self.list_name_layer):
             for j in range(2):
-                if name_layer == 'furnace' or name_layer == 'inside_steel':
+                if layer_name == 'furnace':
                     self.array_len_width_height[i][j] = 'none'
+                elif layer_name == 'inside_steel':
+                    if self.type_steel_material == 'square':
+                        self.array_len_width_height[i][0] = self.width_steel - (2 * self.thickness_steel_square)
+                        self.array_len_width_height[i][1] = self.height_steel - (2 * self.thickness_steel_square)
+                    else:
+                        self.array_len_width_height[i][j] = 'none'
                 else:
                     self.array_len_width_height[i][j] = self.cal_len_fireproofing_width_height(i, j)
 
@@ -357,11 +440,17 @@ class TemperatureCalculation:
 
         if self.type_steel_material == 'square':
             for i, layer_name in enumerate(self.list_name_layer):
-                if layer_name == 'furnace' or layer_name == 'inside_steel':
-                    pass
+                if layer_name == 'furnace':
+                    self.array_len_around[i] = 'none'
+                elif layer_name == 'inside_steel':
+                    if self.type_steel_material == 'square':
+                        self.array_len_around[i] = (
+                                2 * self.array_len_width_height[i][0] + 2 * self.array_len_width_height[i][1])
+                    else:
+                        self.array_len_around[i] = 'none'
                 else:
                     self.array_len_around[i] = (coefficient_fp_cal * self.array_len_width_height[i][0]) + (
-                        2 * self.array_len_width_height[i][1])
+                            2 * self.array_len_width_height[i][1])
         elif self.type_steel_material == 'H-beam':
             for i, layer_name in enumerate(self.list_name_layer):
                 if layer_name == 'furnace' or layer_name == 'inside_steel':
@@ -378,31 +467,34 @@ class TemperatureCalculation:
         if self.type_steel_material == 'square':
             for i, layer_name in enumerate(self.list_name_layer):
                 if layer_name == 'furnace' or layer_name == 'inside_steel':
-                    pass
+                    self.array_area[i] = 'none'
+                elif layer_name == 'steel':
+                    self.array_area[i] = self.width_steel * self.height_steel - (
+                            self.array_len_width_height[i + 1][0] * self.array_len_width_height[i + 1][1])
                 else:
-                    self.array_area[i] = self.array_len_width_height[i][0] * self.array_len_width_height[i][1] - \
-                                     self.array_len_width_height[i + 1][0] * self.array_len_width_height[i + 1][1]
+                    self.array_area[i] = (self.array_len_around[i] + self.array_len_around[
+                        i + 1]) / 2 * self.array_thickness[i]
 
         elif self.type_steel_material == 'H-beam':
             for i, layer_name in enumerate(self.list_name_layer):
                 if layer_name == 'furnace' or layer_name == 'inside_steel':
-                    pass
+                    self.array_area[i] = 'none'
                 else:
-                    self.array_area[i] = self.cal_h_type_area(i) - self.cal_h_type_area(i + 1)
-            self.array_area[self.total_layer + 2] = (2 * (self.width_steel *
-                                                          self.thickness_steel_flange) + (
-                                                             (self.height_steel - (
-                                                                     2 * self.thickness_steel_flange)) *
-                                                             self.thickness_steel_web))
+                    self.array_area[i] = self.cal_h_type_area(i, layer_name)
 
     # H形鋼 各層 面積計算
-    def cal_h_type_area(self, layer_number):
-        area_h_beam = 0
-        # h_area = (self.array_len_width_height[n_layer][0] * self.array_len_width_height[n_layer][1]) - (
-        #         (self.height_steel - (2 * (self.array_thickness_fireproof[1] + self.thickness_steel_flange))) * (
-        #             self.width_steel - self.thickness_steel_web))
-        h_area = 0
-        return h_area
+    def cal_h_type_area(self, layer_number, layer_name):
+        if layer_name == 'steel':
+            area_h_beam = self.thickness_steel_flange * self.width_steel * 2 + (
+                    self.thickness_steel_web * (self.height_steel - (2 * self.thickness_steel_flange)))
+        elif layer_name == 'furnace' or layer_name == 'inside_steel':
+            print("Error : Unexpected name in cal_h_type_area")
+            area_h_beam = 'Error'
+        else:
+            area_h_beam = (self.array_len_around[layer_number] + self.array_len_around[layer_number + 1]) / 2 * \
+                          self.array_thickness[layer_number]
+
+        return area_h_beam
 
     # 外気から表面耐火被覆への温度計算
     # class SurfaceFireProofing(TemperatureCalculation):
