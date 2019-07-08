@@ -194,7 +194,7 @@ class TemperatureCalculation:
 
         # 単位時間前の温度配列
         # [0.炉内, 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層, Total_Layer+3.鋼材]
-        self.array_temperature_prevent = [0 for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
+        self.array_temperature_prevent = ['none' for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
         # 耐火被覆温度初期値 を追加
         for i, layer_name in enumerate(self.list_name_layer):
             if layer_name == 'furnace':
@@ -208,7 +208,7 @@ class TemperatureCalculation:
 
         # 現在の温度配列(単位時間前の温度から計算し代入する)
         # [0.炉内, 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層, Total_Layer+3.鋼材]
-        self.array_temperature = [0 for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
+        self.array_temperature = ['none' for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
 
         self.temperature_k = 20
 
@@ -226,21 +226,21 @@ class TemperatureCalculation:
 
         # 鋼材からの各層耐火被覆厚配列
         # [0.None 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層 Total_Layer+3.鋼材]
-        self.array_thickness_fireproof = [0 for _ in self.list_name_layer]
+        self.array_thickness_fireproof = ['none' for _ in self.list_name_layer]
 
         # 耐火被覆縦横長さ
         # [0.None 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,
         # Total_Layer+2.末端層, Total_Layer+3.鋼材, Total_Layer+4.鋼材内側(角形鋼管のみ)]
-        self.array_len_width_height = [[0 for _ in range(2)] for _ in self.list_name_layer]
+        self.array_len_width_height = [['none' for _ in range(2)] for _ in self.list_name_layer]
 
         # 各層の加熱外周囲
         # [0.None 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,
         # Total_Layer+2.末端層, Total_Layer+3.鋼材, Total_Layer+4.鋼材内側(角形鋼管のみ)]
-        self.array_len_around = [0 for _ in self.list_name_layer]
+        self.array_len_around = ['none' for _ in self.list_name_layer]
 
         # 各層の面積
         # [0.None 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層, Total_Layer+3.鋼材]
-        self.array_area = [0 for _ in self.list_name_layer]
+        self.array_area = ['none' for _ in self.list_name_layer]
 
         # 初期値代入
         self.cal_fp_thick()  # 各層耐火被覆厚計算 array_thickness_fireproof に代入
@@ -387,8 +387,6 @@ class TemperatureCalculation:
                 self.array_thickness_fireproof[i] = 'none'
             elif layer_name == 'surface':
                 self.array_thickness_fireproof[1] = self.thickness_fireproofing
-            elif layer_name == 'steel':
-                self.array_thickness_fireproof[i] = 0
             else:
                 self.array_thickness_fireproof[i] = self.thickness_fireproofing - (
                         self.len_surface + self.thickness_per_layer * (i - 2))
@@ -470,10 +468,10 @@ class TemperatureCalculation:
                     self.array_area[i] = 'none'
                 elif layer_name == 'steel':
                     self.array_area[i] = self.width_steel * self.height_steel - (
-                            self.array_len_width_height[i + 1][0] * self.array_len_width_height[i + 1][1])
+                            self.array_len_width_height[i+1][0] * self.array_len_width_height[i+1][1])
                 else:
-                    self.array_area[i] = (self.array_len_around[i] + self.array_len_around[
-                        i + 1]) / 2 * self.array_thickness[i]
+                    self.array_area[i] = (self.array_len_around[i] + self.array_len_around[i + 1]
+                                          ) / 2 * self.array_thickness[i]
 
         elif self.type_steel_material == 'H-beam':
             for i, layer_name in enumerate(self.list_name_layer):
