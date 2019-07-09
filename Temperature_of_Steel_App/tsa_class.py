@@ -322,6 +322,7 @@ class TemperatureCalculation:
             for i, element in enumerate(self.array_area):
                 print(list_display[i], element)
 
+    # 試験入力値を並べて表示
     def display_input_column(self):
         list_display = []
         for i, name in enumerate(self.list_name_layer):
@@ -468,9 +469,11 @@ class TemperatureCalculation:
                     self.array_area[i] = 'none'
                 elif layer_name == 'steel':
                     self.array_area[i] = self.width_steel * self.height_steel - (
-                            self.array_len_width_height[i+1][0] * self.array_len_width_height[i+1][1])
+                            self.is_float(self.array_len_width_height[i + 1][0]) * self.is_float(
+                                self.array_len_width_height[i + 1][1]))
                 else:
-                    self.array_area[i] = (self.array_len_around[i] + self.array_len_around[i + 1]
+                    self.array_area[i] = (self.is_float(self.array_len_around[i]) + self.is_float(
+                        self.array_len_around[i + 1])
                                           ) / 2 * self.array_thickness[i]
 
         elif self.type_steel_material == 'H-beam':
@@ -489,10 +492,23 @@ class TemperatureCalculation:
             print("Error : Unexpected name in cal_h_type_area")
             area_h_beam = 'Error'
         else:
-            area_h_beam = (self.array_len_around[layer_number] + self.array_len_around[layer_number + 1]) / 2 * \
+            area_h_beam = (self.is_float(self.array_len_around[layer_number]) + self.is_float(
+                self.array_len_around[layer_number + 1])) / 2 * \
                           self.array_thickness[layer_number]
-
         return area_h_beam
+
+    # floatに変換できないstrをエラーする
+    @ staticmethod
+    def is_float(s):
+        try:
+            float(s)
+        except ValueError:
+            return False
+        else:
+            return True
+
+    def cal_new_temperature_array(self):
+        pass
 
     # 外気から表面耐火被覆への温度計算
     # class SurfaceFireProofing(TemperatureCalculation):
