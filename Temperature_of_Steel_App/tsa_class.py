@@ -178,7 +178,7 @@ class TemperatureCalculation:
         # 初期条件
         self.temperature_furnace_default = ini_input.temp_Default_furnace  # 炉内温度 初期値
         # self.temperature_fireproof_default = ini_input.temp_FP  # 耐火被覆温度 初期値
-        # self.temperature_steel_default = ini_input.temp_Steel  # 鋼材温度 初期値
+        self.temperature_steel_default = ini_input.temp_Steel  # 鋼材温度 初期値
 
         # インスタンス変数
         # self.temperature_furnace = ini_input.temp_furnace  # 炉内温度
@@ -194,21 +194,21 @@ class TemperatureCalculation:
 
         # 単位時間前の温度配列
         # [0.炉内, 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層, Total_Layer+3.鋼材]
-        self.array_temperature_prevent = ['none' for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
+        self.array_temperature_prevent = [0 for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
         # 耐火被覆温度初期値 を追加
         for i, layer_name in enumerate(self.list_name_layer):
             if layer_name == 'furnace':
                 self.array_temperature_prevent[i] = self.temperature_furnace_default  # 炉内温度 初期値 を代入
             elif layer_name == 'steel':
-                self.array_temperature_prevent[i] = ini_input.temp_Steel  # 鋼材温度 初期値 を代入
+                self.array_temperature_prevent[i] = self.temperature_steel_default  # 鋼材温度 初期値 を代入
             elif layer_name == 'inside_steel':
-                self.array_temperature_prevent[i] = 'none'
+                self.array_temperature_prevent[i] = 0
             else:
                 self.array_temperature_prevent[i] = ini_input.temp_FP  # 耐火被覆温度 初期値 を代入
 
         # 現在の温度配列(単位時間前の温度から計算し代入する)
         # [0.炉内, 1.表面層, 2.層0, 3.層1, Layer_number+2.層2…,Total_Layer+2.末端層, Total_Layer+3.鋼材]
-        self.array_temperature = ['none' for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
+        self.array_temperature = [0 for _ in self.list_name_layer]  # total_layer + 4 の配列を追加
 
         self.temperature_k = 20
 
@@ -408,7 +408,7 @@ class TemperatureCalculation:
                 else:
                     self.array_len_width_height[i][j] = self.cal_len_fireproofing_width_height(i, j)
 
-    # -耐火被覆幅高長さ計算
+    # 耐火被覆幅高長さ計算
     def cal_len_fireproofing_width_height(self, layer_number, width_or_height):
 
         coefficient_fp_cal = 2  # 床なし、試験大量側に耐火被覆 = 2
@@ -469,10 +469,10 @@ class TemperatureCalculation:
                     self.array_area[i] = 'none'
                 elif layer_name == 'steel':
                     self.array_area[i] = self.width_steel * self.height_steel - (
-                            self.is_float(self.array_len_width_height[i + 1][0]) * self.is_float(
-                                self.array_len_width_height[i + 1][1]))
+                            is_float(self.array_len_width_height[i + 1][0]) * is_float(
+                        self.array_len_width_height[i + 1][1]))
                 else:
-                    self.array_area[i] = (self.is_float(self.array_len_around[i]) + self.is_float(
+                    self.array_area[i] = (is_float(self.array_len_around[i]) + is_float(
                         self.array_len_around[i + 1])
                                           ) / 2 * self.array_thickness[i]
 
@@ -492,154 +492,201 @@ class TemperatureCalculation:
             print("Error : Unexpected name in cal_h_type_area")
             area_h_beam = 'Error'
         else:
-            area_h_beam = (self.is_float(self.array_len_around[layer_number]) + self.is_float(
+            area_h_beam = (is_float(self.array_len_around[layer_number]) + is_float(
                 self.array_len_around[layer_number + 1])) / 2 * \
                           self.array_thickness[layer_number]
         return area_h_beam
 
-    # floatに変換できないstrをエラーする
-    @ staticmethod
-    def is_float(s):
-        try:
-            float(s)
-        except ValueError:
-            return False
-        else:
-            return True
+    # 現在温度を計算
+    def cal_new_temperature_array(self, current_time_seconds):
 
-    def cal_new_temperature_array(self):
-        pass
+        self.array_temperature[0] = self.cal_temperature_furnace(current_time_seconds)  # 炉内温度を代入
+        self.array_temperature[1] = self.surface_fp(self.array_temperature_prevent[0],
+                                                    self.array_temperature_prevent[1],
+                                                    self.array_temperature_prevent[2])
+        terminal_layer_number = self.list_name_layer.index('terminal')
+        for i in range(2, terminal_layer_number):
+            self.array_temperature[i] = \
+                self.fp_to_fp(i,
+                              self.array_temperature_prevent[i - 1],
+                              self.array_temperature_prevent[i],
+                              self.array_temperature_prevent[i + 1])
+        self.array_temperature[terminal_layer_number] = \
+            self.fp_terminal(terminal_layer_number,
+                             self.array_temperature_prevent[
+                                 terminal_layer_number - 1],
+                             self.array_temperature_prevent[
+                                 terminal_layer_number])
 
     # 外気から表面耐火被覆への温度計算
-    # class SurfaceFireProofing(TemperatureCalculation):
+    def surface_fp(self, temperature_furnace, temperature_surface, temperature_layer_0):
 
-    def surface_heat_transfer(self, temp_f, temp_surf):
-        temp_f = temp_f
-        self.heat_flux_convection = 0.023 * (temp_f - temp_surf)
-        self.heat_flux_radiation = float(
-            5.67 * (10 ** -11) * self.emissivity_fireproof * (float(temp_f ** 4) - float(temp_surf ** 4)))
+        thermal_conductivity_pf = self.pf_thermal_conductivity(temperature_surface)
+        heat_flux = self.surface_heat_transfer(temperature_furnace, temperature_surface)
+        heat_flux_convection = heat_flux[0]
+        heat_flux_radiation = heat_flux[1]
 
-    def surface_fp(self, temp_f, temp_surf, temp_t0):
-        self.temp_t0 = temp_t0
-        thermal_conductivity = TemperatureCalculation.pf_thermal_conductivity(temp_surf)
-        self.surface_heat_transfer(temp_f, temp_surf)
+        len_around_surface = self.array_len_around[1]
+        len_around_inside_surface = self.array_len_around[2]
+        area_surface = self.array_area[1]
 
-        # len_x_surf = self.len_wh_TP[1][0]
-        # len_y_surf = self.len_wh_TP[1][1]
-
-        len_around_fp = self.array_len_around[0]
-        len_around_inside_surf = self.array_len_around[1]
-        area_surf = self.array_area[0]
-        # area_surf = 0.1
-
-        print(self.delta_time, self.density_fireproof, self.specific_heat_fireproof, area_surf)
-        print(self.density_fireproof * self.specific_heat_fireproof * area_surf)
+        print(self.delta_time, self.density_fireproof, self.specific_heat_fireproof, area_surface)
+        print(self.density_fireproof * self.specific_heat_fireproof * area_surface)
 
         thermal_resistivity_surf = self.delta_time / (
-                self.density_fireproof * self.specific_heat_fireproof * area_surf)
-        power_per_len_convection = len_around_fp * self.heat_flux_convection
-        power_per_len_radiation = len_around_fp * self.heat_flux_radiation
+                self.density_fireproof * self.specific_heat_fireproof * area_surface)
+
+        power_per_len_convection = len_around_surface * heat_flux_convection
+        power_per_len_radiation = float(len_around_surface) * heat_flux_radiation
         power_per_len_conduction = \
-            len_around_inside_surf * (thermal_conductivity / (self.len_surface + (self.thickness_per_layer / 2))) * (
-                    temp_t0 - temp_surf)
-        temp_surf = temp_surf + thermal_resistivity_surf * (
-                power_per_len_convection + power_per_len_radiation + power_per_len_conduction)
-        return temp_surf
+            len_around_inside_surface * (
+                    thermal_conductivity_pf / (self.array_thickness[1] + (self.array_thickness[2] / 2))) * (
+                    temperature_surface - temperature_layer_0)
 
+        temperature_surface_new = temperature_surface + \
+                                  thermal_resistivity_surf * (
+                                          power_per_len_convection + power_per_len_radiation - power_per_len_conduction)
+        return temperature_surface_new
 
-# 耐火被覆管の温度
-class FpToFp(TemperatureCalculation):
+    def surface_heat_transfer(self, temperature_furnace, temperature_surface):
+        temperature_furnace = temperature_furnace
+        heat_flux_convection = 0.023 * (temperature_furnace - temperature_surface)
+        heat_flux_radiation = float(
+            5.67 * (10 ** -11) * self.emissivity_fireproof * (
+                    float(temperature_furnace ** 4) - float(temperature_surface ** 4)))
+        return heat_flux_convection, heat_flux_radiation
 
-    def fp_to_fp(self, number_layer, temperature_prev, temperature_layer, temperature_next):
-        # len_x_prev = Decimal(self.len_wh_TP[number_layer + 1][0])
-        # len_y_prev = Decimal(self.len_wh_TP[number_layer + 1][1])
-        # len_x_tn = Decimal(self.len_wh_TP[number_layer + 2][0])
-        # len_y_tn = Decimal(self.len_wh_TP[number_layer + 2][1])
+    # 耐火被覆管の温度
+    def fp_to_fp(self, layer_number, temperature_prev, temperature_layer, temperature_next):
+        len_around_prev = self.array_len_around[layer_number - 1]
+        len_around_next = self.array_len_around[layer_number + 1]
 
-        len_around_prev = self.array_len_around[number_layer + 1]
-        len_around_next = self.array_len_around[number_layer + 2]
+        area_this_layer = self.array_area[layer_number]
 
-        area_tn = self.array_area[number_layer + 1]
+        thermal_conductivity = self.pf_thermal_conductivity(temperature_layer)
 
-        thermal_conductivity = TemperatureCalculation.pf_thermal_conductivity(temperature_layer)
-        thermal_resistivity_tn = self.delta_time / (self.density_fireproof * self.specific_heat_fireproof * area_tn)
+        thermal_resistivity_this = self.delta_time / (
+                self.density_fireproof * self.specific_heat_fireproof * area_this_layer)
+
         power_per_len_conduction_prev = \
             len_around_prev * (
-                    thermal_conductivity / ((self.thickness_per_layer / 2) + (self.thickness_per_layer / 2))) * (
+                    thermal_conductivity / ((self.array_thickness[layer_number - 1] / 2) + (
+                    self.array_thickness[layer_number] / 2))) * (
                     temperature_prev - temperature_layer)
         power_per_len_conduction_next = \
             len_around_next * (
-                    thermal_conductivity / ((self.thickness_per_layer / 2) + (self.thickness_per_layer / 2))) * (
-                    temperature_next - temperature_layer)
+                    thermal_conductivity / ((self.array_thickness[layer_number] / 2) + (
+                    self.array_thickness[layer_number + 1] / 2))) * (
+                    temperature_layer - temperature_next)
 
-        temperature_layer = \
-            temperature_layer + thermal_resistivity_tn * (
-                    power_per_len_conduction_prev + power_per_len_conduction_next)
+        temperature_layer_new = temperature_layer + \
+                                thermal_resistivity_this * (
+                                        power_per_len_conduction_prev - power_per_len_conduction_next)
 
-        return temperature_layer
+        return temperature_layer_new
 
+    # 末端の耐火被覆の温度
+    def fp_terminal(self, terminal_layer_number, temperature_terminal_prev, temperature_terminal):
 
-# 末端の耐火被覆の温度
-class FpTerminal(TemperatureCalculation):
+        steel_specific_heat = self.steel_specific_heat(temperature_terminal)
+
+        len_around_terminal = self.array_len_around[terminal_layer_number]
+
+        area_terminal = self.array_area[terminal_layer_number]
+        area_steel = self.array_area[terminal_layer_number + 1]
+
+        thermal_conductivity_terminal = self.pf_thermal_conductivity(temperature_terminal)
+
+        thermal_resistivity_terminal = \
+            self.delta_time / ((self.density_fireproof * self.specific_heat_fireproof * area_terminal) + (
+                    self.density_steel * steel_specific_heat * area_steel))
+
+        power_per_len_conduction_terminal = len_around_terminal * thermal_conductivity_terminal / (
+                (self.array_thickness[terminal_layer_number - 1] / 2) + self.array_thickness[terminal_layer_number])
+
+        temperature_terminal_now = temperature_terminal + \
+                                   thermal_resistivity_terminal * power_per_len_conduction_terminal * (
+                                           temperature_terminal_prev - temperature_terminal)
+        return temperature_terminal_now
 
     @staticmethod
-    def __steel_specific_heat(temp_steel):
-        steel_sh = (0.482 + 8 * (10 ** -10) * ((temp_steel - 273) ** 2))
-        return steel_sh
+    def steel_specific_heat(temperature_steel):
+        # steel_sh = (0.482 + 8 * (10 ** -10) * ((temperature_steel - 273) ** 2))
 
-    def fp_terminal(self, temp_term_prev, temp_term):
-        self.temp_term = temp_term
-        steel_sh = self.__steel_specific_heat(temp_term)
+        temperature_steel_celsius = temperature_steel - 273
+        if 0 <= temperature_steel_celsius < 600:
+            steel_sh = 425 + (7.73 * (10 ** -1) * temperature_steel_celsius) - (
+                    1.69 * (10 ** -3) * temperature_steel_celsius ** 2) + (2.22 * (
+                    10 ** -6) * temperature_steel_celsius ** 3)
+        elif 600 <= temperature_steel_celsius < 735:
+            steel_sh = 666 + 13002 / (738 - temperature_steel_celsius)
+        elif 735 <= temperature_steel_celsius < 900:
+            steel_sh = 545 + 17820 / (temperature_steel_celsius - 731)
+        elif 900 <= temperature_steel_celsius < 1200:
+            steel_sh = 650
+        else:
+            print("Error : ", temperature_steel_celsius, "is unexpected value in temperature of steel")
+            steel_sh = "Error"
 
-        # len_x_Term_prev = Decimal(self.len_wh_TP[self.total_layer + 1][0])
-        # len_y_Term_prev = Decimal(self.len_wh_TP[self.total_layer + 1][1])
-        # len_x_Term = Decimal(self.len_wh_TP[self.total_layer + 2][0])
-        # len_y_Term = Decimal(self.len_wh_TP[self.total_layer + 2][1])
+        steel_specific_heat = float(is_float(steel_sh)) * (10 ** -3)
 
-        len_around_term_prev = self.array_len_around[self.total_layer + 1]
+        return steel_specific_heat
 
-        area_term = self.array_area[self.total_layer + 1]
-        area_s = self.array_area[self.total_layer + 2]
+    # 安定性調査
+    def cal_stability_time(self):
+        len_min = cal_min_array(self.array_thickness)
+        #  max_temperature = self.cal_temperature_max()
+        min_temperature = self.temperature_furnace_default
+        stability_time_fireproofing = \
+            self.specific_heat_fireproof * self.density_fireproof * (len_min ** 2) / 2 / self.pf_thermal_conductivity(
+                min_temperature)
+        stability_time_steel = 100
+        # stability_time_steel = \
+        #     self.steel_specific_heat(self.temperature_steel_default) * self.density_steel * (
+        #                 len_min ** 2) / 2 / 1
 
-        thermal_conductivity_term = TemperatureCalculation.pf_thermal_conductivity(self.temp_term)
-        thermal_resistivity_term = \
-            self.delta_time / ((self.density_fireproof * self.specific_heat_fireproof * area_term) + (
-                    self.density_steel * steel_sh * area_s))
+        print("pf", stability_time_fireproofing, " steel", stability_time_steel)
+        stability_time = cal_min_len(stability_time_fireproofing, stability_time_steel)
 
-        self.temp_term = (temp_term + thermal_resistivity_term * (
-                len_around_term_prev * thermal_conductivity_term / (
-                (self.thickness_per_layer / 2) + self.len_terminal)) * (
-                                  temp_term_prev - temp_term))
-
-        return self.temp_term
-
-
-# 安定性調査
-class StabilityAnalysis(TemperatureCalculation):
-
-    def cal_stability_time(self, cal_temp):
-        len_min = self.cal_min_len(self.thickness_per_layer, self.cal_min_len(cal_temp.len_surf, cal_temp.len_Term))
-        print(len_min)
-        stability_time = \
-            cal_temp.pf_sh * cal_temp.pf_density * len_min ** 2 / 2 / self.pf_thermal_conductivity(cal_temp.tempMAX)
         exponential_10 = int(0)
         while stability_time // 1 == 0:
             stability_time = stability_time * 10
             exponential_10 = exponential_10 + 1
         print(stability_time, exponential_10)
         stability_time = (stability_time // 0.1) / 10
-        self.stability_time = stability_time * (10 ** (-1 * exponential_10))
+        stability_time = stability_time * (10 ** (-1 * exponential_10))
+        stability_time = round(stability_time, exponential_10 + 1)
 
-        return self.stability_time
+        return stability_time
 
     @staticmethod
     def cal_total_time(cal_temp):
         total_test_time = ((cal_temp.test_t * 60 / cal_temp.d_time) * 0.00002 * cal_temp.total_layer) / 3600
         return total_test_time
 
-    @staticmethod
-    def cal_min_len(a, b):
-        if a <= b:
-            return a
-        else:
-            return b
+
+# functions
+
+# floatに変換できないstrをエラーする
+def is_float(s):
+    try:
+        float(s)
+    except ValueError:
+        return False
+    else:
+        return s
+
+
+def cal_min_len(a, b):
+    if a <= b:
+        return a
+    else:
+        return b
+
+
+def cal_min_array(array):
+    min_element = 10000
+    for element in array:
+        if type(element) is int or type(element) is float:
+            min_element = cal_min_len(min_element, element)
+    return min_element

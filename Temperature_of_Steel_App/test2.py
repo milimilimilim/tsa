@@ -12,7 +12,6 @@ from datetime import datetime
 import tkinter
 import tkinter.messagebox
 
-
 loading_val = tsa_class.LoadingInputValue()
 a = tsa_class.TemperatureCalculation(loading_val)
 print("インスタンス生成完了")
@@ -37,7 +36,6 @@ for i in range(8):
         area_sum += a.array_area[i]
 print("area", area_sum)
 
-
 # list_a = a.list_name_layer
 # list_b = []
 # for i, name in enumerate(list_a):
@@ -50,7 +48,19 @@ message_a = "{0} {1} {2}"
 message_s = ["     layer  ", "think_L    ", "think_FP    "]
 print(message_a.format(message_s[0], message_s[1], message_s[2]))
 
-
 print(a.is_under_floor)
 a.display_input_column()
+list_c = ["a", "b", "c", "d", "e", "f", "g"]
 
+print("saishou", tsa_class.cal_min_array(a.array_area))
+
+print(a.list_name_layer.index('terminal'))
+
+for el in list_c:
+    print("eee", el)
+
+for i in range(2, len(list_c) - 1):
+    print(i, list_c[i])
+
+print("\n", a.pf_thermal_conductivity(1000))
+print("s_time", a.cal_stability_time())
