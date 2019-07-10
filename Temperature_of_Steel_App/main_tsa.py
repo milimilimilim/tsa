@@ -1,42 +1,33 @@
 # -*- coding: utf-8 -*-
 import os
-import ntpath
-import xlrd
+import math
+# import ntpath
+# import xlrd
 import xlwt
-import pprint
+# import pprint
 import Temperature_of_Steel_App.tsa_class as tsa_class
 from datetime import datetime
 import tkinter.messagebox
 
 excel_sheet = xlwt.Workbook()
 sheet0 = excel_sheet.add_sheet('DATA_sheet')
-# ip_tsa_class = tsa_class.TemperatureCalculation(tsa_class.LoadingInputValue())
+
 input_value = tsa_class.LoadingInputValue()
 tsa_cal = tsa_class.TemperatureCalculation(input_value)
 
-tsa_classTC = tsa_class.TemperatureCalculation(input_value)
-tsa_class_surFP = tsa_class.SurfaceFireProofing(tsa_classTC)
-tsa_class_fp = tsa_class.FpToFp(tsa_classTC)
-tsa_class_Term = tsa_class.FpTerminal(tsa_classTC)
-
 delta_time = float(tsa_cal.delta_time)
-per_unit_time = float(1 / delta_time)
-number_total_layer = tsa_cal.total_layer
-
-temp_f = float(tsa_classTC.temperature_furnace)
-temp_surf = float(tsa_classTC.temperature_fireproof_default)
-temp_Tn = [float(tsa_classTC.temperature_fireproof_default)] * number_total_layer
-temp_Tn_new = [0] * number_total_layer
-temp_Term = float(tsa_classTC.temperature_fireproof_default)
-
-unit_row = int(60 * per_unit_time)
 testing_time = int(tsa_cal.testing_time)
-loop_range = int((testing_time * 60 * int(per_unit_time)) + 1)  # loop回数
+per_unit_time = float(1/delta_time)
+unit_row = int(60 * per_unit_time)
+loop_range = int(round(testing_time * 60 /delta_time, 0))  # loop回数
+
+array_temperature = tsa_cal.array_temperature
+array_temperature[len(tsa_cal.list_name_layer)-1] = "none"
+array_temperature_prevent = tsa_cal.array_temperature_prevent
+
 is_display_with_kelvin = input_value.is_display_with_kelvin
 # loop_range = 50000
-micro_test = False
-macro_test = False
-rowSrt = 0
+
 bar_message = "\r[{0}] {1}/{2} {3}% 完了"
 
 # 温度をケルビンで保存
@@ -45,73 +36,58 @@ if is_display_with_kelvin:
 else:
     difference_K = int(273)
 
-for row in range(loop_range):
-    # print ('======='+str(row)+'=======')
-    time_minutes = (row / per_unit_time) / 60
+tsa_cal.display_input_column()
+minutes_10_prev = "none"
+array_temperature_save = []
 
-    temp_f_new = tsa_classTC.cal_temperature_furnace(time_minutes)
-    temp_surf_new = tsa_class_surFP.surface_fp(temp_f, temp_surf, temp_Tn[0])  # temp_surf_newに代入
-    temp_Tn_new[0] = tsa_class_fp.fp_to_fp(0, temp_surf, temp_Tn[0], temp_Tn[1])  # レイヤー0をtemp_Tn_newに代入
+for loop_count in range(loop_range + 1):
+    current_time_seconds = delta_time * loop_count
+    current_time_minutes = current_time_seconds / 60
+    # print("------now ", current_time_seconds, "s")
+    minutes_10_now = int(math.floor(current_time_minutes))
+    # print("\n値は",current_time_minutes, minutes_10_prev,minutes_10_now,"\n")
 
-    # レイヤー1から7までをtemp_Tn_newに代入ループ
-    for layer, _ in enumerate(temp_Tn):
-        if layer == 0:
-            pass  # レイヤー0を除外
-        elif layer == (number_total_layer - 1):
-            pass  # レイヤー8を除外
-        else:
-            # レイヤー1から7までをtemp_Tn_newに代入
-            temp_Tn_new[layer] = tsa_class_fp.fp_to_fp(layer, temp_Tn[layer - 1], temp_Tn[layer], temp_Tn[layer + 1])
-            # レイヤー8をtemp_Tn_newに代入
-            temp_Tn_new[number_total_layer - 1] = tsa_class_fp.fp_to_fp(number_total_layer - 1,
-                                                                        temp_Tn[number_total_layer - 2],
-                                                                        temp_Tn[number_total_layer - 1], temp_Term)
-            temp_Term_new = tsa_class_Term.fp_terminal(temp_Tn[number_total_layer - 1], temp_Term)
+    array_temperature = tsa_cal.cal_new_temperature_array(current_time_seconds)
 
-    # 各tempを更新
-    temp_f = temp_f_new
-    temp_surf = temp_surf_new
-    for layer, _ in enumerate(temp_Tn):
-        temp_Tn[layer] = temp_Tn_new[layer]
-    temp_Term = temp_Term_new
+    if minutes_10_now != minutes_10_prev:
+        array_temperature_save_temp =[]
+        for i in range(len(tsa_cal.list_name_layer)):
+            array_temperature_save_temp.append(array_temperature[i])
+        array_temperature_save.append(array_temperature_save_temp)
+
+        array_temperature_save[minutes_10_now][len(tsa_cal.list_name_layer) - 1] = current_time_seconds
+
+    tsa_cal.array_temperature_prevent = array_temperature
+    minutes_10_prev = minutes_10_now
 
     # ======各tempを記録========
 
-    # 保存間隔のためrowSrtを処理
-    if micro_test:
-        rowSrt = row  # デバック用 macro_testがTrueですべての時間保存する
-    elif macro_test and rowSrt > 67:
+    # 進捗状況を表示
+    r_message = int((loop_count * 30 / loop_range) + 1)  # パーセント表示
+    bar = "#" * r_message + " " * (30 - r_message)  # []内の"#"と空白を調整する。iが1で#1つに空白29、iが30で#30個に空白0
+    pers = int(round((loop_count/loop_range)*100, 1))
+    print(bar_message.format(bar, loop_count, loop_range - 1, pers), end="")
+
+
+# Excel への保存処理
+cel_row = 1
+terminal_layer_number = tsa_cal.list_name_layer.index('terminal')
+
+for i, element in enumerate(tsa_cal.list_name_layer):
+    if element == 'inside_steel':
         pass
     else:
-        rowSrt = int((row // unit_row) + 1)  # 保存の時間の間隔を代入
+        sheet0.write(0, i+1,element)
 
-    # 一定（unit_row）の間隔で保存
-    # 代入した時間間隔のとき保存 またはmacro_testがTrueですべての時間を保存
-    if row % unit_row == 0 or micro_test or (row == loop_range - 1) or (macro_test and rowSrt) > 66:
-        # 進捗状況を表示
-        r_message = int((row * 30 / loop_range) + 1)  # パーセント表示
-        bar = "#" * r_message + " " * (30 - r_message)  # []内の"#"と空白を調整する。iが1で#1つに空白29、iが30で#30個に空白0
-        pers = int(r_message * 100 / 30)
-        print(bar_message.format(bar, row, loop_range - 1, pers), end="")
-        # print ('======='+str(row)+'=======')
+for i in range(minutes_10_prev+1):
+    cel_row += 1
+    # print("\n save",array_temperature_save[i])
+    sheet0.write(cel_row, 0, array_temperature_save[i][terminal_layer_number+2]/60)
+    sheet0.write(cel_row, 1, array_temperature_save[i][0] - difference_K)
+    sheet0.write(cel_row, 2, array_temperature_save[i][1] - difference_K)
 
-        if micro_test or (row == loop_range - 1) or (rowSrt > 66 and macro_test):
-            rowSrt = rowSrt + 1
-        # デバック用 macro_testがTrueの時 時間を秒で保存
-        if micro_test or (rowSrt > 66 and macro_test):
-            sheet0.write(rowSrt, 0, row / per_unit_time)
-        elif row == 0:
-            sheet0.write(rowSrt, 0, int(time_minutes))
-        else:
-            sheet0.write(rowSrt, 0, int(time_minutes + 1))
-
-        # Excel への保存処理
-        sheet0.write(rowSrt, 1, temp_f - difference_K)
-        sheet0.write(rowSrt, 2, temp_surf - difference_K)
-        for excel_column, _ in enumerate(temp_Tn):
-            sheet0.write(rowSrt, excel_column + 3, temp_Tn[excel_column] - difference_K)
-        sheet0.write(rowSrt, number_total_layer + 3, temp_Term - difference_K)
-    pass
+    for excel_column in range(2, terminal_layer_number+2):
+        sheet0.write(cel_row, excel_column + 1 , array_temperature_save[i][excel_column] - difference_K)
 
 # 保存
 print('\n=====実行完了=====')
@@ -120,7 +96,7 @@ root.withdraw()
 ret = tkinter.messagebox.askyesno('確認', 'データを保存しますか？')
 if ret:
     char_datafile_date = datetime.now().strftime("%m%d_%Y_%H%M%S")
-    char_datafile_name = 'TSA_DATA' + char_datafile_date + '.xls'
+    char_datafile_name = 'TSA_DATA_' + char_datafile_date + '.xls'
     setting_path = input_value.data_save_path
     char_datafile_path = os.path.join(setting_path, char_datafile_name)
     print(char_datafile_path)

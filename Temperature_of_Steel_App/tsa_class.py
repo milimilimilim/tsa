@@ -21,20 +21,19 @@ class TestTsa:
 class LoadingInputValue:
 
     def __init__(self):
-
         ini_files = configparser.ConfigParser()
         ini_files.read('./tsa_config.ini', 'UTF-8')
 
         # save path
-        LoadingInputValue.data_save_path = ini_files.get('settings', 'data_save_path')
+        self.data_save_path = str(ini_files.get('settings', 'data_save_path'))
 
         # test detail
         self.d_time = float(ini_files.get('settings', 'delta_time'))
         self.is_display_with_kelvin = bool(
-            self.true_or_false('settings, display_Kelvin', ini_files.get('settings', 'display_Kelvin')))
+            true_or_false(ini_files.get('settings', 'display_Kelvin')))
         self.test_t = int(ini_files.get('settings', 'testing_time'))
         self.u_floor = bool(
-            self.true_or_false('Test_Specimens , under_floor', ini_files.get('Test_Specimens', 'under_floor')))
+            true_or_false(ini_files.get('Test_Specimens', 'under_floor')))
 
         # test specimen
         self.type_Steel = ini_files.get('Test_Specimens', 'type_of_steel')
@@ -60,9 +59,17 @@ class LoadingInputValue:
 
         # layer detail
         self.total_layer = int(ini_files.get('Test_Specimens', 'number_of_layer'))
-        self.len_surf = float(ini_files.get('Test_Specimens', 'thickness_of_Fireproofing_surface')) * (10 ** -3)
-        self.len_Term = float(ini_files.get('Test_Specimens', 'thickness_of_Fireproofing_terminal')) * (10 ** -3)
-        self.len_Tn = float((self.thickness_FP - self.len_surf - self.len_Term) / self.total_layer)  # 耐火被覆1層の厚
+        self.is_auto_thickness_surface_terminal = bool(
+            true_or_false(ini_files.get('Test_Specimens', 'is_auto_fil_thickness_surface_terminal')))
+
+        if self.is_auto_thickness_surface_terminal:
+            self.len_Tn = float(self.thickness_FP / (self.total_layer + 2))
+            self.len_surf = self.len_Tn
+            self.len_Term = self.len_Tn
+        else:
+            self.len_surf = float(ini_files.get('Test_Specimens', 'thickness_of_Fireproofing_surface')) * (10 ** -3)
+            self.len_Term = float(ini_files.get('Test_Specimens', 'thickness_of_Fireproofing_terminal')) * (10 ** -3)
+            self.len_Tn = float((self.thickness_FP - self.len_surf - self.len_Term) / self.total_layer)  # 耐火被覆1層の厚
 
         # Default temperature
         self.temp_Default_furnace = float(ini_files.get('default-temperature', 'temperature_of_Furnace')) + 273
@@ -75,15 +82,6 @@ class LoadingInputValue:
         self.pf_specific_heat = float(ini_files.get('variable', 'specific_heat_of_Fireproofing'))
         self.pf_density = float(ini_files.get('variable', 'density_of_Fireproofing'))
         self.steel_density = float(ini_files.get('variable', 'density_of_Steel'))
-
-    @staticmethod
-    def true_or_false(jd_name, judge):
-        if judge == "True":
-            return True
-        elif judge == "False":
-            return False
-        else:
-            print(jd_name + 'Error')
 
 
 # メインクラス
@@ -186,7 +184,8 @@ class TemperatureCalculation:
         # インスタンス配列変数のリスト
         list_layer = ['furnace', 'surface']
         for i in range(self.total_layer):
-            list_layer.append(i)
+            list_app = "layer" + str(i)
+            list_layer.append(list_app)
         list_layer.extend(['terminal', 'steel', 'inside_steel'])
         print(list_layer)
         self.list_name_layer = list_layer
@@ -517,6 +516,8 @@ class TemperatureCalculation:
                                  terminal_layer_number - 1],
                              self.array_temperature_prevent[
                                  terminal_layer_number])
+        self.array_temperature[terminal_layer_number + 1] = self.array_temperature[terminal_layer_number]
+        return self.array_temperature
 
     # 外気から表面耐火被覆への温度計算
     def surface_fp(self, temperature_furnace, temperature_surface, temperature_layer_0):
@@ -529,9 +530,6 @@ class TemperatureCalculation:
         len_around_surface = self.array_len_around[1]
         len_around_inside_surface = self.array_len_around[2]
         area_surface = self.array_area[1]
-
-        print(self.delta_time, self.density_fireproof, self.specific_heat_fireproof, area_surface)
-        print(self.density_fireproof * self.specific_heat_fireproof * area_surface)
 
         thermal_resistivity_surf = self.delta_time / (
                 self.density_fireproof * self.specific_heat_fireproof * area_surface)
@@ -611,7 +609,7 @@ class TemperatureCalculation:
 
     @staticmethod
     def steel_specific_heat(temperature_steel):
-        # steel_sh = (0.482 + 8 * (10 ** -10) * ((temperature_steel - 273) ** 2))
+        # steel_sh = (0.482 + 8 * (10 ** -10) * ((temperature_steel - 273) ** 2)) * (10 ** 3)
 
         temperature_steel_celsius = temperature_steel - 273
         if 0 <= temperature_steel_celsius < 600:
@@ -666,7 +664,6 @@ class TemperatureCalculation:
 
 
 # functions
-
 # floatに変換できないstrをエラーする
 def is_float(s):
     try:
@@ -677,6 +674,7 @@ def is_float(s):
         return s
 
 
+# 2つのint or float を比べ小さいほうを返す
 def cal_min_len(a, b):
     if a <= b:
         return a
@@ -684,9 +682,20 @@ def cal_min_len(a, b):
         return b
 
 
+# 配列の中で最小の要素を返す
 def cal_min_array(array):
     min_element = 10000
     for element in array:
         if type(element) is int or type(element) is float:
             min_element = cal_min_len(min_element, element)
     return min_element
+
+
+# 文字列のTrue Falseをboolで返す
+def true_or_false(judge):
+    if judge == "True":
+        return True
+    elif judge == "False":
+        return False
+    else:
+        print('Error : ', judge, " is unexpected string")

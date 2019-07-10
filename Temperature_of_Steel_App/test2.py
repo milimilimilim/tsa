@@ -29,12 +29,6 @@ print("インスタンス生成完了")
 # area_test = (a.array_len_around[1]+a.array_len_around[6])/2*10
 # print("area=", area_test)
 #
-print("\n 面積")
-area_sum = 0
-for i in range(8):
-    if i != 0 and i != 7 and i != 6:
-        area_sum += a.array_area[i]
-print("area", area_sum)
 
 # list_a = a.list_name_layer
 # list_b = []
@@ -44,23 +38,35 @@ print("area", area_sum)
 #     list_b.append(input_name)
 # for i in list_b:
 #     print(i)
-message_a = "{0} {1} {2}"
-message_s = ["     layer  ", "think_L    ", "think_FP    "]
-print(message_a.format(message_s[0], message_s[1], message_s[2]))
 
-print(a.is_under_floor)
 a.display_input_column()
-list_c = ["a", "b", "c", "d", "e", "f", "g"]
+print("s_time",a.cal_stability_time())
 
-print("saishou", tsa_class.cal_min_array(a.array_area))
+# d_time = a.delta_time
+# test_time = a.testing_time
+# loop = int(round(test_time * 60 / d_time, 0))
+# # loop = 1000
+# array_temperature = a.array_temperature
+# array_temperature[len(a.list_name_layer) - 1] = "none"
+# array_temperature_prevent = a.array_temperature_prevent
+#
+# for loop_count in range(loop):
+#     current_time_seconds = d_time * loop_count
+#     print("------now ", current_time_seconds, "s")
+#     array_temperature = a.cal_new_temperature_array(current_time_seconds)
+#     for i in range(len(a.list_name_layer) - 1):
+#         print(array_temperature[i] - 273)
+#     print(array_temperature[len(a.list_name_layer) - 1])
+#     a.array_temperature_prevent = array_temperature
+#
+# def list_2 (i):
+#     return [i, i * 2, i * 3]
+# # print(a.cal_stability_time())
+# list_f = []
+# list_g =list_2(i)
+# for i in range(10):
+#     list_f.append(list_2(i))
+# for i in range(10):
+#     print(list_f[i])
 
-print(a.list_name_layer.index('terminal'))
 
-for el in list_c:
-    print("eee", el)
-
-for i in range(2, len(list_c) - 1):
-    print(i, list_c[i])
-
-print("\n", a.pf_thermal_conductivity(1000))
-print("s_time", a.cal_stability_time())
