@@ -7,19 +7,20 @@ def button1_clicked():
     quit()
 
 
-def rb_clicked():
+def rb_clicked(input_frame):
     print('v1 = %s' % v1.get())
-    input_frame = ttk.LabelFrame(frame1, text="test")
-
+    #  input_frame = ttk.LabelFrame(frame1, text="test")
 
     if v1.get() == 'A':
         input_frame.pack_forget()
         tk.Label(input_frame, text="no").grid(row=3)
         input_frame.pack()
+
     elif v1.get() == 'B':
         input_frame.pack_forget()
         tk.Label(input_frame, text="yes").grid(row=3)
         input_frame.pack()
+        frame2.forget()
 
 
 def make_frame():
@@ -54,7 +55,7 @@ rb1 = ttk.Radiobutton(
     text='Option 1',
     value='A',
     variable=v1,
-    command=rb_clicked,
+    command=lambda:rb_clicked(frame4),
     width=10)
 # rb1.grid(row=0, column=0, sticky="WE")
 rb1.pack(side = 'left')
@@ -64,9 +65,9 @@ rb2 = ttk.Radiobutton(
     text='Option 2',
     value='B',
     variable=v1,
-    command=rb_clicked,
+    command=lambda:rb_clicked(frame4),
     width=10)
-# rb2.grid(row=0, column=1, sticky="WE")
+rb2.grid(row=0, column=1, sticky="WE")
 rb2.pack(side = 'left')
 frame2 = ttk.LabelFrame(frame1, text="鋼材種")
 
@@ -78,9 +79,9 @@ else:
 
 frame3.pack()
 frame2.pack()  # frame2を配置(綴じる)
-frame1.grid(row=0, column=0)  # frame1を配置(綴じる)
+frame1.pack(pady = 10)  # frame1を配置(綴じる)
 # frame4.pack()
-rb_clicked
+rb_clicked(frame4)
 
 
 root.mainloop()
