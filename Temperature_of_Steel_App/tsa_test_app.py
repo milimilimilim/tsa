@@ -5,10 +5,6 @@ import time
 import xlrd
 import xlwt
 import Temperature_of_Steel_App.tsa_class as tsa_class
-from decimal import *
-import configparser
-from datetime import datetime
-# from tkinter import messagebox
 import tkinter as tk
 from tkinter import ttk
 
@@ -27,37 +23,36 @@ def rb_clicked():
 
     if v1.get() == 'A':
         frame4.pack_forget()
-        # tk.Label(input_frame, text="no").grid(row=3)
-        frame3.pack()
+        frame3.pack(side='left')
     elif v1.get() == 'B':
         frame3.pack_forget()
-        frame4.pack()
+        frame4.pack(side='left')
 
 
 master = tk.Tk()
 master.title("tsa_GUI")
-master.geometry("500x400")
+master.geometry("330x400")
 
-frame0 = ttk.LabelFrame(master, text="部材種", padding=5)
-frame1 = ttk.Label(frame0, padding=5, width=500)
-frame2 = ttk.Label(frame0, padding=5, width=500)
-frame3 = ttk.LabelFrame(frame2, text="鋼材種", padding=5)
+frame0 = ttk.LabelFrame(master, text="部材種", padding=5, width=500)
+frame1 = ttk.Label(frame0, padding=5, width=400)
+frame2 = ttk.LabelFrame(frame0, text="鋼材種", padding=5)
+frame3 = ttk.Label(frame2, padding=5)
 
 row_type_steel_material_guide = 3
-ttk.Label(frame3, text="高さ(h)", font=("", 11)).grid(row=row_type_steel_material_guide, column=1)
-ttk.Label(frame3, text="幅(w)", font=("", 11)).grid(row=row_type_steel_material_guide, column=3)
-ttk.Label(frame3, text="鋼材厚(r)", font=("", 11)).grid(row=row_type_steel_material_guide, column=5)
+ttk.Label(frame3, text="高さ(h)", font=("meiryo", 10)).grid(row=row_type_steel_material_guide, column=1)
+ttk.Label(frame3, text="幅(w)", font=("meiryo", 10)).grid(row=row_type_steel_material_guide, column=3)
+ttk.Label(frame3, text="鋼材厚(r)", font=("meiryo", 10)).grid(row=row_type_steel_material_guide, column=5)
 
 row_type_steel_material = 4
 entry_width_type_steel = 5
 ttk.Label(frame3, text="鋼材種").grid(row=row_type_steel_material)
 ttk.Entry(frame3, width=entry_width_type_steel, justify="right").grid(row=row_type_steel_material, column=1)
-ttk.Label(frame3, text="  ×  ").grid(row=row_type_steel_material, column=2)
+ttk.Label(frame3, text="×").grid(row=row_type_steel_material, column=2)
 ttk.Entry(frame3, width=entry_width_type_steel, justify="right").grid(row=row_type_steel_material, column=3)
-ttk.Label(frame3, text="  ×  ").grid(row=row_type_steel_material, column=4)
+ttk.Label(frame3, text="×").grid(row=row_type_steel_material, column=4)
 ttk.Entry(frame3, width=entry_width_type_steel, justify="right").grid(row=row_type_steel_material, column=5)
 
-frame4 = ttk.LabelFrame(frame2, text="鋼材種", padding=5)
+frame4 = ttk.Label(frame2, padding=5)
 
 row_type_steel_material_guide = 3
 ttk.Label(frame4, text="高さ(h)", font=("", 11)).grid(row=row_type_steel_material_guide, column=1)
@@ -99,10 +94,16 @@ rb2 = ttk.Radiobutton(
     command=rb_clicked)
 rb2.pack(fil="x", side='left')
 
+
+frame0.pack(fill='x')
+# frame0.pack_propagate(0)
+
 frame1.pack()
-frame2.pack()
-frame3.pack()
-frame0.pack(pady = 0)  # frame1を配置(綴じる)
+# frame1.pack_propagate(0)
+frame2.pack(fill='x')
+# frame2.pack_propagate(0)
+frame3.pack(side='left')
+
 frame5.pack()
 
 master.mainloop()
