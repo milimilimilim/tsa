@@ -7,81 +7,59 @@ def button1_clicked():
     quit()
 
 
-def rb_clicked(input_frame):
+def rb_clicked():
     print('v1 = %s' % v1.get())
     #  input_frame = ttk.LabelFrame(frame1, text="test")
 
     if v1.get() == 'A':
-        input_frame.pack_forget()
-        tk.Label(input_frame, text="no").grid(row=3)
-        input_frame.pack()
+        # tL0.destroy()
+        v2.set("A")
+        ent01.configure(state='normal')
 
     elif v1.get() == 'B':
-        input_frame.pack_forget()
-        tk.Label(input_frame, text="yes").grid(row=3)
-        input_frame.pack()
-        frame2.forget()
+        # tL0.place(x=100,y=100)
+        print("active")
+        ent01.configure(state='readonly')
 
 
-def make_frame():
-    pass
-
-# master = tk.Tk()
-# master.geometry("300x400")
-#
-# frame0 = ttk.Labelframe(master, text='部材種', padding=5).grid(row=0, column=0)
-#
-# # tk.Label(frame0, text="鋼材種").grid(row=1)
-#
-# frame1 = ttk.LabelFrame(frame0, text='Options').grid(row=1, column=0)
-#
-# tk.Label(frame1, text="鋼材種").grid(row=2)
-#
-# frame0.pack()
-# frame1.pack()
-#
-# master.mainloop()
 root = tk.Tk()
 root.geometry("300x400")
-frame1 = ttk.LabelFrame(root, text="部材種", padding=5)
-frame3 = ttk.Label(frame1)
-frame4 = ttk.LabelFrame(frame1, text="test")
-# label1 = ttk.Label(frame1,text="text1").grid(row=0,column=0)
+frame0 = ttk.LabelFrame(root, text="部材種", padding=5, width=500)
+
+tL0=tk.Label(root, text="[mm]")
+tL0.place(x=100,y=100)
 
 v1 = tk.StringVar()
+v2 = tk.StringVar()
+v3 = tk.StringVar()
+# v3.set(" ")
+
+lab_0 = ttk.Label(frame0,textvariable=v2)
+ent01= ttk.Entry(frame0)
+lab_0.pack()
+ent01.pack()
+ent01.pack_forget()
+# v3.set("readonly")
+
+ent01.pack()
 v1.set('A')
 rb1 = ttk.Radiobutton(
-    frame3,
-    text='Option 1',
+    frame0,
+    text='角形鋼管   ',
     value='A',
     variable=v1,
-    command=lambda:rb_clicked(frame4),
-    width=10)
-# rb1.grid(row=0, column=0, sticky="WE")
-rb1.pack(side = 'left')
+    command=rb_clicked)
+rb1.pack(side='left')
 
 rb2 = ttk.Radiobutton(
-    frame3,
-    text='Option 2',
+    frame0,
+    text='H形鋼',
     value='B',
     variable=v1,
-    command=lambda:rb_clicked(frame4),
-    width=10)
-rb2.grid(row=0, column=1, sticky="WE")
-rb2.pack(side = 'left')
-frame2 = ttk.LabelFrame(frame1, text="鋼材種")
+    command=rb_clicked)
+rb2.pack()
 
-if v1.get() == 'A':
-    entry1 = ttk.Entry(frame2).grid(row=2, column=0)
-    button1 = ttk.Button(frame2, text="BUTTON1").grid(row=2, column=1)
-else:
-    label_0 = tk.Label(frame2, text="no").grid(row=3)
 
-frame3.pack()
-frame2.pack()  # frame2を配置(綴じる)
-frame1.pack(pady = 10)  # frame1を配置(綴じる)
-# frame4.pack()
-rb_clicked(frame4)
-
+frame0.pack()
 
 root.mainloop()
